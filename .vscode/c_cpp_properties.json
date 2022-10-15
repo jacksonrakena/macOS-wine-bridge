@@ -1,0 +1,15 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": ["${workspaceFolder}/**"],
+      "defines": [],
+      "macFrameworkPath": [],
+      "compilerPath": "/opt/local/bin/x86_64-w64-mingw32-gcc",
+      "cStandard": "gnu17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "macos-gcc-arm64"
+    }
+  ],
+  "version": 4
+}

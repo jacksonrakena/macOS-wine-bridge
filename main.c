@@ -3,116 +3,118 @@
 #include <string.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <Ntdef.h>
 
-struct sockaddr_un {
-    unsigned short sun_family;               /* AF_UNIX */
-    char           sun_path[108];            /* pathname */
+struct sockaddr_un
+{
+    unsigned short sun_family; /* AF_UNIX */
+    char sun_path[108];        /* pathname */
 };
 
 // #define AF_UNIX     0x0001
 // #define SOCK_STREAM 0x0001
-#define F_SETFL     0x0004
-#define O_RDONLY    0x0000
-#define O_WRONLY    0x0001
-#define O_CREAT     0x0200
-#define O_APPEND    0x0008
-#define O_NONBLOCK  0x0004
+#define F_SETFL 0x0004
+#define O_RDONLY 0x0000
+#define O_WRONLY 0x0001
+#define O_CREAT 0x0200
+#define O_APPEND 0x0008
+#define O_NONBLOCK 0x0004
 #define BUFSIZE 2048 // size of read/write buffers
 
-__declspec(naked) void __syscall() {
-	__asm__ (
-            "__syscall:\n\t"
-            // "push rdi\n\t"
-            // "push rsi\n\t"
-            // "push rdx\n\t"
-            // "push r10\n\t"
-            // "push r8\n\t"
-            // "push r9\n\t"
+__declspec(naked) void __syscall()
+{
+    __asm__(
+        "__syscall:\n\t"
+        // "push rdi\n\t"
+        // "push rsi\n\t"
+        // "push rdx\n\t"
+        // "push r10\n\t"
+        // "push r8\n\t"
+        // "push r9\n\t"
 
-            "add rax, 0x2000000\n\t"
-            // "mov rdi, [rsp]\n\t"
-            // "mov rsi, [rsp + 4]\n\t"
-            // "mov rdx, [rsp + 8]\n\t"
-            // "mov r10, [rsp + 12]\n\t"
-            // "mov r8, [rsp + 16]\n\t"
-            // "mov r9, [rsp + 16]\n\t"
+        "add rax, 0x2000000\n\t"
+        // "mov rdi, [rsp]\n\t"
+        // "mov rsi, [rsp + 4]\n\t"
+        // "mov rdx, [rsp + 8]\n\t"
+        // "mov r10, [rsp + 12]\n\t"
+        // "mov r8, [rsp + 16]\n\t"
+        // "mov r9, [rsp + 16]\n\t"
 
-            "syscall\n\t"
-            "jnc noerror\n\t"
-            "neg rax\n\t"
-            "noerror:\n\t"
+        "syscall\n\t"
+        "jnc noerror\n\t"
+        "neg rax\n\t"
+        "noerror:\n\t"
 
-            // "pop r9\n\t"
-            // "pop r8\n\t"
-            // "pop r10\n\t"
-            // "pop rdx\n\t"
-            // "pop rsi\n\t"
-            // "pop rdi\n\t"
-            "ret"
-            );
+        // "pop r9\n\t"
+        // "pop r8\n\t"
+        // "pop r10\n\t"
+        // "pop rdx\n\t"
+        // "pop rsi\n\t"
+        // "pop rdi\n\t"
+        "ret");
 }
 
 // technocoder: sysv_abi must be used for x86_64 unix system calls
-__declspec(naked) __attribute__((sysv_abi)) unsigned int l_getpid() {
-    __asm__ (
-            "mov eax, 0x14\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) unsigned int l_getpid()
+{
+    __asm__(
+        "mov eax, 0x14\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_close(int fd) {
-    __asm__ (
-            "mov eax, 0x06\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_close(int fd)
+{
+    __asm__(
+        "mov eax, 0x06\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg) {
-    __asm__ (
-            "mov eax, 0x5c\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg)
+{
+    __asm__(
+        "mov eax, 0x5c\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_open(const char* filename, int flags, int mode) {
-    __asm__ (
-            "mov eax, 0x05\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_open(const char *filename, int flags, int mode)
+{
+    __asm__(
+        "mov eax, 0x05\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_write(unsigned int fd, const char* buf, unsigned int count) {
-    __asm__ (
-            "mov eax, 0x04\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_write(unsigned int fd, const char *buf, unsigned int count)
+{
+    __asm__(
+        "mov eax, 0x04\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_read(unsigned int fd, char* buf, unsigned int count) {
-    __asm__ (
-            "mov eax, 0x03\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_read(unsigned int fd, char *buf, unsigned int count)
+{
+    __asm__(
+        "mov eax, 0x03\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_socket(int domain, int type, int protocol) {
-	__asm__ (
-            "mov eax, 0x61\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_socket(int domain, int type, int protocol)
+{
+    __asm__(
+        "mov eax, 0x61\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
-__declspec(naked) __attribute__((sysv_abi)) int l_connect(int sockfd, const struct sockaddr *addr, unsigned int addrlen) {
-	__asm__ (
-            "mov eax, 0x62\n\t"
-            "jmp __syscall\n\t"
-            "ret"
-            );
+__declspec(naked) __attribute__((sysv_abi)) int l_connect(int sockfd, const struct sockaddr *addr, unsigned int addrlen)
+{
+    __asm__(
+        "mov eax, 0x62\n\t"
+        "jmp __syscall\n\t"
+        "ret");
 }
 
-static const char* get_temp_path()
+static const char *get_temp_path()
 {
-    const char* temp = getenv("TMPDIR");
+    const char *temp = getenv("TMPDIR");
     temp = temp ? temp : "/tmp";
     return temp;
 }
@@ -126,33 +128,60 @@ DWORD WINAPI winwrite_thread(LPVOID lpvParam);
 static HANDLE conn_evt = INVALID_HANDLE_VALUE;
 static BOOL fConnected = FALSE;
 
-static HANDLE make_wine_system_process()
+/**
+ * Tells Wine to set this process to a system process.
+ *
+ * Finds the module handle for ntdll.dll, finds the pointer for NtSetInformationProcess
+ * within it, and calls it.
+ */
+static NTSTATUS make_wine_system_process()
 {
     HMODULE ntdll_mod;
     FARPROC proc;
 
-    if ((ntdll_mod = GetModuleHandleW(L"NTDLL.DLL")) == NULL) {
+    // Find module handle for ntdll.dll
+    if ((ntdll_mod = GetModuleHandleW(L"NTDLL.DLL")) == NULL)
+    {
         printf("Cannot find NTDLL.DLL in process map");
         return NULL;
     }
 
-
+    // Find the function pointer for NtSetInformationProcess
     proc = GetProcAddress(ntdll_mod, "NtSetInformationProcess");
-    if (proc == NULL) {
+
+    if (proc == NULL)
+    {
         printf("Not a wine installation?");
         return NULL;
     }
+    HANDLE process_info, hThread = NULL;
+    NTSTATUS status;
+    CONST INT ProcessWineMakeProcessSystem = 1000;
 
-    // This does NOT work.
-    return ((HANDLE (CDECL *)(HANDLE, PROCESS_INFORMATION_CLASS))proc)(GetCurrentProcess(), 1000);
+    // Cannot call NtSetInformationProcess directly due to some linker issue.
+    // If you want to try and restore this, you will need to #include <winternl.h>
+    // status = NtSetInformationProcess(GetCurrentProcess(), ProcessWineMakeProcessSystem, &process_info, sizeof(HANDLE *));
+
+    // Cast the pointer to a function,
+    // and then call it
+    status = ((NTSTATUS(CDECL *)(HANDLE, PROCESS_INFORMATION_CLASS, PVOID, ULONG))proc)(
+        // Tell Wine to escalate this process
+        GetCurrentProcess(),
+
+        // To a system process
+        ProcessWineMakeProcessSystem,
+
+        // And store the info in this pointer.
+        &process_info,
+        sizeof(HANDLE *));
+    return status;
 }
 
 DWORD WINAPI wait_for_client(LPVOID param)
 {
     (void)param;
 
-    fConnected = ConnectNamedPipe(hPipe, NULL) ?
-         TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+    fConnected = ConnectNamedPipe(hPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
 
     SetEvent(conn_evt);
     return 0;
@@ -160,13 +189,18 @@ DWORD WINAPI wait_for_client(LPVOID param)
 
 int main(void)
 {
-    DWORD  dwThreadId = 0;
-    HANDLE hThread = NULL;
-    HANDLE wine_evt = NULL;
+    printf("\n");
+    DWORD dwThreadId = 0;
 
-//    if ((wine_evt = make_wine_system_process()) == NULL) {
-//        return 1;
-//    }
+    HANDLE hThread = NULL;
+
+    NTSTATUS status = make_wine_system_process();
+
+    if (NT_ERROR(status))
+    {
+        printf("Wine could not make this a system process");
+        return 1;
+    }
 
     // The main loop creates an instance of the named pipe and
     // then waits for a client to connect to it. When the client
@@ -176,16 +210,16 @@ int main(void)
 
     printf("Opening discord-ipc-0 Windows pipe\n");
     hPipe = CreateNamedPipeW(
-            L"\\\\.\\pipe\\discord-ipc-0",             // pipe name
-            PIPE_ACCESS_DUPLEX,       // read/write access
-            PIPE_TYPE_BYTE |       // message type pipe
-            PIPE_READMODE_BYTE |   // message-read mode
-            PIPE_WAIT,                // blocking mode
-            1, // max. instances
-            BUFSIZE,                  // output buffer size
-            BUFSIZE,                  // input buffer size
-            0,                        // client time-out
-            NULL);                    // default security attribute
+        L"\\\\.\\pipe\\discord-ipc-0", // pipe name
+        PIPE_ACCESS_DUPLEX,            // read/write access
+        PIPE_TYPE_BYTE |               // message type pipe
+            PIPE_READMODE_BYTE |       // message-read mode
+            PIPE_WAIT,                 // blocking mode
+        1,                             // max. instances
+        BUFSIZE,                       // output buffer size
+        BUFSIZE,                       // input buffer size
+        0,                             // client time-out
+        NULL);                         // default security attribute
 
     if (hPipe == INVALID_HANDLE_VALUE)
     {
@@ -195,13 +229,14 @@ int main(void)
 
     conn_evt = CreateEventW(NULL, FALSE, FALSE, NULL);
     CloseHandle(CreateThread(NULL, 0, wait_for_client, NULL, 0, NULL));
-    for (;;) {
-        HANDLE events[] = { conn_evt };
-        DWORD result = WaitForMultipleObjectsEx(1, events, FALSE, 0, FALSE);
+    for (;;)
+    {
+        DWORD result = WaitForSingleObject(conn_evt, INFINITE);
         if (result == WAIT_TIMEOUT)
-	    continue;
+            continue;
 
-        if (result == 0) {
+        if (result == 0)
+        {
             printf("Bridge exiting, wine closing\n");
         }
 
@@ -214,7 +249,8 @@ int main(void)
 
         printf("Creating socket\n");
 
-        if ((sock_fd = l_socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+        if ((sock_fd = l_socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
+        {
             printf("Failed to create socket\n");
             return 1;
         }
@@ -227,34 +263,38 @@ int main(void)
         const char *const temp_path = get_temp_path();
 
         char connected = 0;
-        for (int pipeNum = 0; pipeNum < 10; ++pipeNum) {
+        for (int pipeNum = 0; pipeNum < 10; ++pipeNum)
+        {
 
             snprintf(addr.sun_path, sizeof(addr.sun_path), "%sdiscord-ipc-%d", temp_path, pipeNum);
             printf("Attempting to connect to %s\n", addr.sun_path);
 
-            if (l_connect(sock_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
+            if (l_connect(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+            {
                 printf("Failed to connect\n");
-            } else {
+            }
+            else
+            {
                 connected = 1;
                 break;
             }
         }
 
-        if (!connected) {
+        if (!connected)
+        {
             printf("Could not connect to discord client\n");
             return 1;
         }
 
-
         printf("Connected successfully\n");
 
         hThread = CreateThread(
-                NULL,              // no security attribute
-                0,                 // default stack size
-                winwrite_thread,    // thread proc
-                (LPVOID) NULL,    // thread parameter
-                0,                 // not suspended
-                &dwThreadId);      // returns thread ID
+            NULL,            // no security attribute
+            0,               // default stack size
+            winwrite_thread, // thread proc
+            (LPVOID)NULL,    // thread parameter
+            0,               // not suspended
+            &dwThreadId);    // returns thread ID
 
         if (hThread == NULL)
         {
@@ -262,21 +302,25 @@ int main(void)
             return 1;
         }
 
-
-        for (;;) {
+        for (;;)
+        {
             char buf[BUFSIZE];
             DWORD bytes_read = 0;
             BOOL fSuccess = ReadFile(
-                    hPipe,        // handle to pipe
-                    buf,    // buffer to receive data
-                    BUFSIZE, // size of buffer
-                    &bytes_read, // number of bytes read
-                    NULL);        // not overlapped I/O
-            if (!fSuccess) {
-                if (GetLastError() == ERROR_BROKEN_PIPE) {
+                hPipe,       // handle to pipe
+                buf,         // buffer to receive data
+                BUFSIZE,     // size of buffer
+                &bytes_read, // number of bytes read
+                NULL);       // not overlapped I/O
+            if (!fSuccess)
+            {
+                if (GetLastError() == ERROR_BROKEN_PIPE)
+                {
                     printf("winread EOF\n");
                     return 0;
-                } else {
+                }
+                else
+                {
                     printf("Failed to read from pipe\n");
                     return 1;
                 }
@@ -289,9 +333,11 @@ int main(void)
 
             int total_written = 0, written = 0;
 
-            while (total_written < bytes_read) {
+            while (total_written < bytes_read)
+            {
                 written = l_write(sock_fd, buf + total_written, bytes_read - total_written);
-                if (written < 0) {
+                if (written < 0)
+                {
                     printf("Failed to write to socket\n");
                     return 1;
                 }
@@ -304,22 +350,26 @@ int main(void)
         // The client could not connect, so close the pipe.
         CloseHandle(hPipe);
 
-    CloseHandle(wine_evt);
     CloseHandle(conn_evt);
 
     return 0;
 }
 
-DWORD WINAPI winwrite_thread(LPVOID lpvParam) {
+DWORD WINAPI winwrite_thread(LPVOID lpvParam)
+{
 
-    for (;;) {
+    for (;;)
+    {
         char buf[BUFSIZE];
         int bytes_read = l_read(sock_fd, buf, BUFSIZE);
-        if (bytes_read < 0) {
+        if (bytes_read < 0)
+        {
             printf("Failed to read from socket\n");
             l_close(sock_fd);
             return 1;
-        } else if (bytes_read == 0) {
+        }
+        else if (bytes_read == 0)
+        {
             printf("EOF\n");
             break;
         }
@@ -331,14 +381,16 @@ DWORD WINAPI winwrite_thread(LPVOID lpvParam) {
 
         DWORD total_written = 0, cbWritten = 0;
 
-        while (total_written < bytes_read) {
+        while (total_written < bytes_read)
+        {
             BOOL fSuccess = WriteFile(
-                    hPipe,        // handle to pipe
-                    buf + total_written,     // buffer to write from
-                    bytes_read - total_written, // number of bytes to write
-                    &cbWritten,   // number of bytes written
-                    NULL);        // not overlapped I/O
-            if (!fSuccess) {
+                hPipe,                      // handle to pipe
+                buf + total_written,        // buffer to write from
+                bytes_read - total_written, // number of bytes to write
+                &cbWritten,                 // number of bytes written
+                NULL);                      // not overlapped I/O
+            if (!fSuccess)
+            {
                 printf("Failed to write to pipe\n");
                 return 1;
             }

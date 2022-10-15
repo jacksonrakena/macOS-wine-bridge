@@ -16,6 +16,25 @@ Note: These instructions assume the usage of a [Wineskin](http://wineskin.urgeso
     "C:\<path>\execute.bat" 
     ```
 
+## Compiling (macOS)
+To compile this project, you will need to install `x86_64-w64-mingw32-gcc` (The MinGW GCC compiler).  
+You can install this with [MacPorts](https://ports.macports.org/port/x86_64-w64-mingw32-gcc/):  
+```bat
+sudo port install x86_64-w64-mingw32-gcc
+```
+
+Then, use the Makefile to compile:
+```bat
+make
+```
+You can also manually compile using the command found in the Makefile:
+```bat
+x86_64-w64-mingw32-gcc -masm=intel -mwindows -o bridge.exe -O2 -Wall main.c
+```
+
+This process will give you a `bridge.exe` that you can call inside the Wine command line.  
+XIV for Mac users can replace the embedded bridge found at `/Applications/XIV for Mac.app/Contents/Resources/discord_bridge.exe` with this one.
+
 ## Technical information
 
 This fork is based on three other projects:
