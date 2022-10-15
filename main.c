@@ -136,12 +136,15 @@ static HANDLE make_wine_system_process()
         return NULL;
     }
 
-    if ((proc = GetProcAddress(ntdll_mod, "__wine_make_process_system")) == NULL) {
+
+    proc = GetProcAddress(ntdll_mod, "NtSetInformationProcess");
+    if (proc == NULL) {
         printf("Not a wine installation?");
         return NULL;
     }
 
-    return ((HANDLE (CDECL *)(void))proc)();
+    // This does NOT work.
+    return ((HANDLE (CDECL *)(HANDLE, PROCESS_INFORMATION_CLASS))proc)(GetCurrentProcess(), 1000);
 }
 
 DWORD WINAPI wait_for_client(LPVOID param)
@@ -161,9 +164,9 @@ int main(void)
     HANDLE hThread = NULL;
     HANDLE wine_evt = NULL;
 
-    if ((wine_evt = make_wine_system_process()) == NULL) {
-        return 1;
-    }
+//    if ((wine_evt = make_wine_system_process()) == NULL) {
+//        return 1;
+//    }
 
     // The main loop creates an instance of the named pipe and
     // then waits for a client to connect to it. When the client
@@ -193,8 +196,8 @@ int main(void)
     conn_evt = CreateEventW(NULL, FALSE, FALSE, NULL);
     CloseHandle(CreateThread(NULL, 0, wait_for_client, NULL, 0, NULL));
     for (;;) {
-        HANDLE events[] = { wine_evt, conn_evt };
-        DWORD result = WaitForMultipleObjectsEx(2, events, FALSE, 0, FALSE);
+        HANDLE events[] = { conn_evt };
+        DWORD result = WaitForMultipleObjectsEx(1, events, FALSE, 0, FALSE);
         if (result == WAIT_TIMEOUT)
 	    continue;
 
