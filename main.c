@@ -146,7 +146,6 @@ main_loop: // This jump statement means we can jump back to the main loop after 
         if (result == WAIT_OBJECT_0)
         {
             printf("Bridge exiting, wine closing\n");
-            return 0;
         }
 
         break;
