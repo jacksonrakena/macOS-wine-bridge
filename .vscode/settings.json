@@ -1,5 +1,6 @@
 {
   "files.associations": {
     "winternl.h": "c"
-  }
+  },
+  "discord.enabled": false
 }
