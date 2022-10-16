@@ -33,7 +33,9 @@ x86_64-w64-mingw32-gcc -masm=intel -mwindows -o bridge.exe -O2 -Wall main.c
 ```
 
 This process will give you a `bridge.exe` that you can call inside the Wine command line.  
-XIV for Mac users can replace the embedded bridge found at `/Applications/XIV for Mac.app/Contents/Resources/discord_bridge.exe` with this one.
+XIV for Mac users can replace the embedded bridge found at `/Applications/XIV for Mac.app/Contents/Resources/discord_bridge.exe` with this one.  
+  
+If you'd like to automatically replace the XIV for Mac version with the compiled one, you can use `make xiv_bridge` which will overwrite the above path with the compiled result.
 
 ## Technical information
 

@@ -104,7 +104,11 @@ int main(void)
     // Open the Windows pipe to connect to the IPC client.
     // This is the "fake" pipe for the RPC clients (XIV, osu!) to connect to.
     // This pipe will only even open on port 0 (discord-ipc-0).
+main_loop: // This jump statement means we can jump back to the main loop after a client disconnects.
+    CloseHandle(hPipe); // Close the named pipe, if it is open. We are going to make a new one. Kernel automatically deletes the pipe once the last handle is closed.
     printf("Opening discord-ipc-0 Windows pipe.\n");
+
+    // Create the Windows named pipe.
     hPipe = CreateNamedPipeW(
         L"\\\\.\\pipe\\discord-ipc-0", // pipe name
         PIPE_ACCESS_DUPLEX,            // read/write access
@@ -117,26 +121,32 @@ int main(void)
         0,                             // client time-out
         NULL);                         // default security attribute
 
+    // This would usually happen when there's already another pipe open with the same name.
+    // The user may have two instances of the bridge, or the bridge didn't cleanup (CloseHandle) properly.
     if (hPipe == INVALID_HANDLE_VALUE)
     {
         printf("CreateNamedPipe failed, GLE=%lu.\n", GetLastError());
+        printf("Do you have two bridges open at once?");
         return -1;
     }
 
+    // Create the connection event, and reset it.
     conn_evt = CreateEventW(NULL, FALSE, FALSE, NULL);
+    ResetEvent(conn_evt);
 
     // Wait for an RPC client to connect to the Windows pipe.
     printf("Waiting for an RPC connection in Wine...\n");
-    CloseHandle(CreateThread(NULL, 0, wait_for_client, NULL, 0, NULL));
+    CloseHandle(CreateThread(NULL, TRUE, wait_for_client, NULL, 0, NULL));
     for (;;)
     {
         DWORD result = WaitForSingleObject(conn_evt, INFINITE);
         if (result == WAIT_TIMEOUT)
             continue;
 
-        if (result == 0)
+        if (result == WAIT_OBJECT_0)
         {
             printf("Bridge exiting, wine closing\n");
+            return 0;
         }
 
         break;
@@ -144,17 +154,15 @@ int main(void)
 
     if (fConnected)
     {
-        printf("Client connected\n");
-
-        printf("Creating socket\n");
+        printf("Connected to Windows game. Opening UNIX socket.\n");
 
         if ((sock_fd = l_socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
         {
-            printf("Failed to create socket\n");
+            printf("Failed to create UNIX socket. Exiting.\n");
             return 1;
         }
 
-        printf("Socket created\n");
+        printf("Created UNIX socket successfully. Beginning passthrough.\n");
 
         struct sockaddr_un addr;
         addr.sun_family = AF_UNIX;
@@ -166,11 +174,11 @@ int main(void)
         {
 
             snprintf(addr.sun_path, sizeof(addr.sun_path), "%sdiscord-ipc-%d", temp_path, pipeNum);
-            printf("Attempting to connect to %s\n", addr.sun_path);
+            printf("[unix] Attempting to connect to %s\n", addr.sun_path);
 
             if (l_connect(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
             {
-                printf("Failed to connect\n");
+                printf("[unix] Failed to connect to UNIX socket.\n");
             }
             else
             {
@@ -181,11 +189,11 @@ int main(void)
 
         if (!connected)
         {
-            printf("Could not connect to discord client\n");
+            printf("Could not connect to Discord client. Exiting.\n");
             return 1;
         }
 
-        printf("Connected successfully\n");
+        printf("Connection established to Discord.\n");
 
         hThread = CreateThread(
             NULL,            // no security attribute
@@ -215,13 +223,13 @@ int main(void)
             {
                 if (GetLastError() == ERROR_BROKEN_PIPE)
                 {
-                    printf("winread EOF\n");
-                    return 0;
+                    printf("Pipe broken. Restarting loop.\n");
+                    goto main_loop;
                 }
                 else
                 {
-                    printf("Failed to read from pipe\n");
-                    return 1;
+                    printf("Pipe read failed. Restarting loop.\n");
+                    goto main_loop;
                 }
             }
 
