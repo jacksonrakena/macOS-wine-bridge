@@ -7,18 +7,19 @@
 
 #include "asm.c"
 
-static HANDLE hPipe = INVALID_HANDLE_VALUE;
-static int sock_fd;
-static DWORD WINAPI winwrite_thread(LPVOID lpvParam);
 #define ProcessWineMakeProcessSystem 1000
+
+static DWORD WINAPI winwrite_thread(LPVOID lpvParam);
 NTSTATUS NTAPI NtSetInformationProcess(HANDLE, PROCESS_INFORMATION_CLASS, PVOID, ULONG);
 
-// koukuno: This implemented because if no client ever connects but there are no more user
-// wine processes running, this bridge can just exit gracefully.
+static HANDLE hPipe = INVALID_HANDLE_VALUE;
+static int sock_fd;
+
 static HANDLE conn_evt = INVALID_HANDLE_VALUE;
 static BOOL fConnected = FALSE;
 
 
+// Waits for a Windows client to connect to the socket.
 DWORD WINAPI wait_for_client(LPVOID param)
 {
     (void)param;
