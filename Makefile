@@ -6,9 +6,9 @@ default: all
 all: bridge.exe
 
 bridge.exe: main.c
-	$(CC) -masm=intel -mwindows -o $@ $(CFLAGS) $<
+	$(CC) -masm=intel -mwindows -o $@ $(CFLAGS) $< -lntdll
 xiv_bridge: main.c
-	$(CC) -masm=intel -mwindows -o "/Applications/XIV on Mac.app/Contents/Resources/discord_bridge.exe" $(CFLAGS) $<
+	$(CC) -masm=intel -mwindows -o "/Applications/XIV on Mac.app/Contents/Resources/discord_bridge.exe" $(CFLAGS) $< -lntdll
 
 clean:
 	rm -v bridge.exe

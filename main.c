@@ -9,66 +9,15 @@
 
 static HANDLE hPipe = INVALID_HANDLE_VALUE;
 static int sock_fd;
-DWORD WINAPI winwrite_thread(LPVOID lpvParam);
+static DWORD WINAPI winwrite_thread(LPVOID lpvParam);
+#define ProcessWineMakeProcessSystem 1000
+NTSTATUS NTAPI NtSetInformationProcess(HANDLE, PROCESS_INFORMATION_CLASS, PVOID, ULONG);
 
 // koukuno: This implemented because if no client ever connects but there are no more user
 // wine processes running, this bridge can just exit gracefully.
 static HANDLE conn_evt = INVALID_HANDLE_VALUE;
 static BOOL fConnected = FALSE;
 
-/**
- * Tells Wine to set this process to a system process.
- *
- * Wine does this by intercepting calls to NtSetInformationProcess with a custom ProcessInformationClass
- * code of 1000 indicating that the process should be set to a system process.
- *
- * Finds the module handle for ntdll.dll, finds the pointer for NtSetInformationProcess
- * within it, and calls it.
- */
-static NTSTATUS make_wine_system_process()
-{
-    HMODULE ntdll_mod;
-    FARPROC proc;
-
-    // Find module handle for ntdll.dll
-    if ((ntdll_mod = GetModuleHandleW(L"NTDLL.DLL")) == NULL)
-    {
-        printf("Cannot find NTDLL.DLL. Is this a Wine installation?\n");
-        exit(1);
-        return NULL;
-    }
-
-    // Find the function pointer for NtSetInformationProcess
-    proc = GetProcAddress(ntdll_mod, "NtSetInformationProcess");
-
-    if (proc == NULL)
-    {
-        printf("Can't find a NT routine. Is this a Wine installation?\n");
-        exit(1);
-        return NULL;
-    }
-    HANDLE process_info = NULL;
-    NTSTATUS status;
-    CONST INT ProcessWineMakeProcessSystem = 1000;
-
-    // Cannot call NtSetInformationProcess directly due to some linker issue.
-    // If you want to try and restore this, you will need to #include <winternl.h>
-    // status = NtSetInformationProcess(GetCurrentProcess(), ProcessWineMakeProcessSystem, &process_info, sizeof(HANDLE *));
-
-    // Cast the pointer to a function,
-    // and then call it
-    status = ((NTSTATUS(CDECL *)(HANDLE, PROCESS_INFORMATION_CLASS, PVOID, ULONG))proc)(
-        // Tell Wine to escalate this process
-        GetCurrentProcess(),
-
-        // To a system process
-        ProcessWineMakeProcessSystem,
-
-        // And store the info in this pointer.
-        &process_info,
-        sizeof(HANDLE *));
-    return status;
-}
 
 DWORD WINAPI wait_for_client(LPVOID param)
 {
@@ -82,12 +31,12 @@ DWORD WINAPI wait_for_client(LPVOID param)
 
 int main(void)
 {
-    printf("\n");
     DWORD dwThreadId = 0;
-
-    HANDLE hThread = NULL;
-
-    NTSTATUS status = make_wine_system_process();
+    HANDLE process_info, hThread = NULL;
+    NTSTATUS status;
+        
+    printf("\n");
+    status = NtSetInformationProcess(GetCurrentProcess(), ProcessWineMakeProcessSystem, &process_info, sizeof(HANDLE *));
 
     if (NT_ERROR(status))
     {
@@ -261,7 +210,7 @@ main_loop: // This jump statement means we can jump back to the main loop after 
     return 0;
 }
 
-DWORD WINAPI winwrite_thread(LPVOID lpvParam)
+static DWORD WINAPI winwrite_thread(LPVOID lpvParam)
 {
 
     for (;;)
